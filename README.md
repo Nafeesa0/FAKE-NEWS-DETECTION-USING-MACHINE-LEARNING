@@ -43,6 +43,7 @@ Dataset Classes:
 - False – Fake or fabricated news articles
 
 **Development Environment**
+
 ***Software Environment***
 
 - Python 3.x (Anaconda Distribution)
