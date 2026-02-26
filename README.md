@@ -150,16 +150,16 @@ The following Python libraries are required:
 
 ***Installation commands:***
 
-pip install pandas
-pip install numpy
-pip install tensorflow
-pip install keras
-pip install scikit-learn
-pip install beautifulsoup4
-pip install requests
-pip install django
-pip install matplotlib
-pip install seaborn
+      - pip install pandas
+      - pip install numpy
+      - pip install tensorflow
+      - pip install keras
+      - pip install scikit-learn
+      - pip install beautifulsoup4
+      - pip install requests
+      - pip install django
+      - pip install matplotlib
+      - pip install seaborn
 
 
 **Research Papers Referenced**
