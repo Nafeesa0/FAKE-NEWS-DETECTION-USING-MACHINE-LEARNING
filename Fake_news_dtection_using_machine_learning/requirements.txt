@@ -1,0 +1,31 @@
+# ── Web framework ─────────────────────────────────────────────────────────
+Django==4.2.7
+
+# ── AI / Deep learning ────────────────────────────────────────────────────
+tensorflow==2.15.0          # includes Keras — do NOT add keras separately
+numpy==1.24.3
+
+# ── NLP ───────────────────────────────────────────────────────────────────
+nltk==3.8.1
+
+# ── Web scraping ──────────────────────────────────────────────────────────
+beautifulsoup4==4.12.2
+requests==2.31.0
+
+# ── Celery + Redis (scheduled & manual scraping) ──────────────────────────
+celery==5.3.6
+redis==5.0.1
+kombu==5.3.4
+
+# ── ML training only (ml_pipeline/train_model.py) ────────────────────────
+# Not needed to run the Django app — only required when retraining the model
+pandas==2.0.3
+scikit-learn==1.3.2
+matplotlib==3.7.3
+seaborn==0.12.2
+
+# ── Optional: persist Celery schedules/results in Django DB ──────────────
+# Uncomment and add to INSTALLED_APPS if you want Beat schedule management
+# via the Django admin panel.
+# django-celery-beat==2.5.0
+# django-celery-results==2.5.1
