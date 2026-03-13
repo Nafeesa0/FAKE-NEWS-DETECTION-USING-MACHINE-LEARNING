@@ -1,0 +1,130 @@
+{% extends 'news/base.html' %}
+{% block title %}Scrape News — InfoTrust{% endblock %}
+
+{% block content %}
+<div class="col-lg-8 mx-auto">
+
+  <!-- Header -->
+  <div style="text-align:center;margin-bottom:40px">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--green-soft);border:1px solid rgba(5,150,105,0.2);color:var(--green-vivid);font-size:0.75rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;padding:6px 14px;border-radius:var(--r-full);margin-bottom:20px">
+      <span style="width:7px;height:7px;background:var(--green-vivid);border-radius:50%;animation:pulse-dot 2s ease-in-out infinite;display:inline-block"></span>
+      Automated via Celery Beat
+    </div>
+    <h1 class="section-title" style="margin-bottom:12px">News Collection</h1>
+    <p class="lead">Articles are auto-fetched every hour. Trigger a run manually below.</p>
+  </div>
+
+  <!-- Trigger card -->
+  <div class="card" style="margin-bottom:24px;text-align:center;padding:48px 40px">
+    <div style="width:72px;height:72px;background:var(--blue-soft);border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--blue-royal);margin:0 auto 24px">
+      <i class="fas fa-cloud-arrow-down"></i>
+    </div>
+    <h3 style="font-family:var(--font-display);font-weight:800;color:var(--text-dark);margin-bottom:12px;letter-spacing:-0.02em">Trigger Manual Scrape</h3>
+    <p style="color:var(--text-muted);max-width:480px;margin:0 auto 28px;font-size:0.95rem;line-height:1.7">
+      Dispatches <code style="background:var(--blue-soft);color:var(--blue-royal);padding:2px 7px;border-radius:4px;font-size:0.85rem">auto_scrape_news</code> to the Celery queue immediately — scrapes BBC, Reuters &amp; CNN, verifies each article with the AI model, and logs the run.
+    </p>
+
+    <div id="taskStatus" style="display:none;margin-bottom:24px">
+      <div style="background:var(--green-soft);border:1px solid rgba(5,150,105,0.2);border-radius:var(--r-md);padding:16px 24px;display:inline-flex;align-items:center;gap:12px;font-size:0.9rem;font-weight:600;color:var(--green-vivid)">
+        <i class="fas fa-circle-notch fa-spin" id="taskSpinner"></i>
+        <span id="taskStatusText">Task queued — worker is processing…</span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button id="triggerBtn" onclick="triggerScrape()" class="btn btn-primary btn-lg">
+        <i class="fas fa-play me-2"></i> Run Now
+      </button>
+      <a href="{% url 'news_feed' %}" class="btn btn-outline-secondary btn-lg">
+        <i class="fas fa-newspaper me-2"></i> View News Feed
+      </a>
+    </div>
+  </div>
+
+  <!-- Info row -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card" style="padding:24px">
+        <div class="feature-icon feature-icon-blue" style="margin-bottom:14px"><i class="fas fa-globe"></i></div>
+        <h6 style="font-family:var(--font-display);font-weight:700;color:var(--text-dark);margin-bottom:8px">Sources</h6>
+        <p style="font-size:0.83rem;color:var(--text-muted);margin:0;line-height:1.6">BBC News · Reuters · CNN</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card" style="padding:24px">
+        <div class="feature-icon feature-icon-green" style="margin-bottom:14px"><i class="fas fa-clock"></i></div>
+        <h6 style="font-family:var(--font-display);font-weight:700;color:var(--text-dark);margin-bottom:8px">Schedule</h6>
+        <p style="font-size:0.83rem;color:var(--text-muted);margin:0;line-height:1.6">Every hour · auto via Celery Beat</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card" style="padding:24px">
+        <div class="feature-icon feature-icon-amber" style="margin-bottom:14px"><i class="fas fa-copy"></i></div>
+        <h6 style="font-family:var(--font-display);font-weight:700;color:var(--text-dark);margin-bottom:8px">Deduplication</h6>
+        <p style="font-size:0.83rem;color:var(--text-muted);margin:0;line-height:1.6">Duplicate titles are skipped automatically</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-info" style="font-size:0.875rem">
+    <i class="fas fa-circle-info me-2"></i>
+    <strong>Redis + Celery required.</strong> The task is queued via Redis — ensure the Celery worker is running.
+    View run history and outcomes on the <a href="{% url 'statistics' %}" style="font-weight:700">Statistics page</a>.
+  </div>
+
+</div>
+
+<script>
+async function triggerScrape() {
+  const btn     = document.getElementById('triggerBtn');
+  const status  = document.getElementById('taskStatus');
+  const text    = document.getElementById('taskStatusText');
+  const spinner = document.getElementById('taskSpinner');
+  const box     = status.querySelector('div');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Running…';
+  status.style.display = 'block';
+  text.textContent = 'Connecting…';
+
+  // Reset to green style in case of a previous error
+  box.style.background = 'var(--green-soft)';
+  box.style.color      = 'var(--green-vivid)';
+  box.style.borderColor = 'rgba(5,150,105,0.2)';
+
+  try {
+    const data = await InfoTrust.ajax('{% url "trigger_scrape_task" %}', { method: 'POST' });
+
+    if (!data.success) throw new Error(data.error || 'Unknown error');
+
+    if (data.mode === 'celery') {
+      // Async — task queued, worker will process
+      spinner.className  = 'fas fa-circle-notch fa-spin';
+      text.textContent   = `Task queued (ID: ${data.task_id.slice(0,8)}…) — Celery worker is processing.`;
+      setTimeout(() => {
+        spinner.className = 'fas fa-check-circle';
+        text.textContent  = 'Queued! Check the Statistics page for results once the worker finishes.';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-play me-2"></i> Run Now';
+      }, 3000);
+
+    } else {
+      // Sync — already done, we have real numbers
+      spinner.className = 'fas fa-check-circle';
+      text.textContent  = `Done — saved ${data.saved}, skipped ${data.skipped} duplicates, ${data.errors} errors.`;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-play me-2"></i> Run Now';
+    }
+
+  } catch (err) {
+    text.textContent  = `Error: ${err.message}`;
+    spinner.className = 'fas fa-triangle-exclamation';
+    box.style.background  = 'var(--red-soft)';
+    box.style.color       = 'var(--red-vivid)';
+    box.style.borderColor = 'rgba(230,57,70,0.2)';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-play me-2"></i> Run Now';
+  }
+}
+</script>
+{% endblock %}

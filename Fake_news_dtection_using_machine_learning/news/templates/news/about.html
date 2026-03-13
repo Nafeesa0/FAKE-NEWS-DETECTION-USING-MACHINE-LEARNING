@@ -1,0 +1,671 @@
+{% extends 'news/base.html' %}
+{% block title %}About InfoTrust — AI Fake News Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── About-page specific ───────────────────────────────────────────── */
+
+/* Hero */
+.about-hero {
+  background: linear-gradient(135deg, #0D1B3E 0%, #1A3FBF 60%, #2B5CE6 100%);
+  border-radius: 24px; padding: 80px 48px;
+  text-align: center; position: relative; overflow: hidden; margin-bottom: 64px;
+}
+.about-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 80% at 15% 50%, rgba(255,255,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 85% 30%, rgba(5,150,105,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.about-hero-grid {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden; opacity: 0.15;
+}
+.about-hero-grid svg { width: 100%; height: 100%; }
+.about-hero-content { position: relative; z-index: 1; }
+.about-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.9); font-weight: 700; font-size: 0.75rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 6px 16px; border-radius: 99px; margin-bottom: 24px;
+}
+.about-hero h1 {
+  font-family: 'Fraunces', serif; font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 900; color: white; letter-spacing: -0.04em;
+  margin-bottom: 20px; line-height: 1.08;
+}
+.about-hero .lead { color: rgba(255,255,255,0.75); max-width: 560px; margin: 0 auto 32px; font-size: 1.1rem; }
+.hero-metrics {
+  display: inline-flex; gap: 0;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px; overflow: hidden; padding: 0;
+}
+.hero-metric {
+  padding: 20px 32px; text-align: center; border-right: 1px solid rgba(255,255,255,0.1);
+}
+.hero-metric:last-child { border-right: none; }
+.hero-metric-value { font-family: 'Fraunces', serif; font-size: 1.9rem; font-weight: 900; color: white; line-height: 1; }
+.hero-metric-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.55); margin-top: 4px; }
+
+/* Section divider label */
+.divider-label {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 40px;
+}
+.divider-label::before,.divider-label::after {
+  content: ''; flex: 1; height: 1px; background: #DDE5F0;
+}
+.divider-label span {
+  font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.12em; color: #6B7A99; white-space: nowrap;
+}
+
+/* Architecture diagram */
+.arch-diagram {
+  display: flex; flex-direction: column; gap: 0;
+}
+.arch-layer {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 24px;
+  border-left: 3px solid transparent;
+  border-radius: 10px; margin-bottom: 6px;
+  transition: all 200ms ease; cursor: default;
+  background: #F8FAFF;
+  position: relative;
+}
+.arch-layer:hover { transform: translateX(6px); box-shadow: 0 4px 16px rgba(15,45,107,0.1); }
+.arch-layer-1  { border-left-color: #1A3FBF; }
+.arch-layer-2  { border-left-color: #6d28d9; }
+.arch-layer-3  { border-left-color: #0891b2; }
+.arch-layer-4  { border-left-color: #059669; }
+.arch-layer-5  { border-left-color: #D97706; }
+.arch-layer-6  { border-left-color: #E63946; }
+.arch-layer-7  { border-left-color: #f59e0b; }
+.arch-layer-out{ background: #ECFDF5; border-left-color: #059669; border-width: 4px; }
+
+.arch-icon {
+  width: 42px; height: 42px; border-radius: 10px; background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(15,45,107,0.1);
+  border: 1px solid #DDE5F0;
+}
+.arch-label { flex: 1; }
+.arch-label strong { display: block; font-size: 0.9rem; font-weight: 700; color: #0D1B3E; }
+.arch-label small  { font-size: 0.78rem; color: #6B7A99; }
+.arch-badge {
+  font-size: 0.68rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 99px; border: 1px solid;
+}
+.arch-connector {
+  width: 2px; height: 12px; background: linear-gradient(180deg,#DDE5F0,#B8C7E0);
+  margin: 0 0 0 37px;
+}
+
+/* Timeline */
+.timeline { position: relative; padding-left: 48px; }
+.timeline::before {
+  content: ''; position: absolute; left: 18px; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(180deg, #1A3FBF, #DDE5F0);
+}
+.timeline-item { position: relative; margin-bottom: 36px; }
+.timeline-item:last-child { margin-bottom: 0; }
+.timeline-dot {
+  position: absolute; left: -38px; top: 4px;
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-family: 'Fraunces', serif; font-size: 1rem;
+  color: white; flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(26,63,191,0.3);
+}
+.timeline-item:nth-child(1) .timeline-dot { background: #1A3FBF; }
+.timeline-item:nth-child(2) .timeline-dot { background: #059669; }
+.timeline-item:nth-child(3) .timeline-dot { background: #D97706; }
+.timeline-item:nth-child(4) .timeline-dot { background: #2B5CE6; }
+.timeline-item:nth-child(5) .timeline-dot { background: #6d28d9; }
+.timeline-item:nth-child(6) .timeline-dot { background: #E63946; }
+.timeline-card {
+  background: white; border: 1px solid #DDE5F0;
+  border-radius: 12px; padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(15,45,107,0.06);
+  transition: all 200ms ease;
+}
+.timeline-card:hover { box-shadow: 0 6px 20px rgba(15,45,107,0.1); transform: translateX(4px); }
+.timeline-title { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 700; color: #0D1B3E; margin-bottom: 6px; letter-spacing: -0.02em; }
+.timeline-desc { font-size: 0.875rem; color: #6B7A99; line-height: 1.65; margin: 0; }
+
+/* Tech stack cards */
+.tech-group {
+  background: white; border: 1px solid #DDE5F0;
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 4px 16px rgba(15,45,107,0.06);
+  transition: all 200ms ease; height: 100%;
+}
+.tech-group:hover { box-shadow: 0 8px 32px rgba(15,45,107,0.12); transform: translateY(-3px); }
+.tech-group-header {
+  padding: 28px 28px 20px;
+  display: flex; align-items: center; gap: 16px;
+}
+.tech-group-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; color: white;
+}
+.tech-group-title { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 800; color: #0D1B3E; letter-spacing: -0.02em; }
+.tech-group-sub   { font-size: 0.8rem; color: #6B7A99; font-weight: 500; margin-top: 2px; }
+.tech-group-items { padding: 0 20px 20px; }
+.tech-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 8px; border-radius: 8px;
+  transition: background 150ms ease; cursor: default;
+}
+.tech-row:hover { background: #F8FAFF; }
+.tech-row-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+.tech-row-name  { font-weight: 700; font-size: 0.875rem; color: #0D1B3E; }
+.tech-row-desc  { font-size: 0.75rem; color: #6B7A99; margin-top: 1px; }
+
+/* Dataset bars */
+.dataset-bar-wrap { margin-bottom: 20px; }
+.dataset-bar-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.dataset-bar-name  { font-weight: 700; font-size: 0.9rem; color: #0D1B3E; }
+.dataset-bar-count { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 800; }
+.dataset-bar-track { height: 10px; background: #F0F4FF; border-radius: 99px; overflow: hidden; }
+.dataset-bar-fill  { height: 100%; border-radius: 99px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+/* Mission */
+.mission-band {
+  background: linear-gradient(135deg, #0D1B3E 0%, #1A3FBF 100%);
+  border-radius: 24px; padding: 72px 48px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.mission-band::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(43,92,230,0.3) 0%, transparent 60%);
+}
+.mission-band-content { position: relative; z-index: 1; }
+.mission-icon { font-size: 3.5rem; color: rgba(255,255,255,0.9); margin-bottom: 24px; animation: pulse-soft 3s ease-in-out infinite; }
+@keyframes pulse-soft { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+
+/* Celery info card */
+.celery-card {
+  background: linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 100%);
+  border: 1.5px solid rgba(5,150,105,0.25); border-radius: 16px; padding: 28px 32px;
+}
+.celery-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #059669; color: white;
+  border-radius: 99px; padding: 5px 14px;
+  font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.celery-schedule-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid rgba(5,150,105,0.1);
+}
+.celery-schedule-item:last-child { border-bottom: none; }
+.celery-sched-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(5,150,105,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: #059669; flex-shrink: 0; margin-top: 2px; }
+.celery-sched-title { font-weight: 700; font-size: 0.875rem; color: #0D1B3E; }
+.celery-sched-desc  { font-size: 0.8rem; color: #6B7A99; margin-top: 2px; }
+
+@media(max-width:768px) {
+  .about-hero { padding: 48px 24px; }
+  .hero-metrics { flex-direction: column; width: 100%; }
+  .hero-metric { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .hero-metric:last-child { border-bottom: none; }
+  .mission-band { padding: 48px 24px; }
+  .timeline { padding-left: 40px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+<div class="about-hero animate-fade-in">
+    <div class="about-hero-grid">
+        <svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <defs><pattern id="dotgrid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+                <circle cx="1" cy="1" r="1.2" fill="white"/>
+            </pattern></defs>
+            <rect width="1000" height="400" fill="url(#dotgrid)"/>
+        </svg>
+    </div>
+    <div class="about-hero-content">
+        <div class="about-eyebrow"><i class="fas fa-shield-halved"></i> InfoTrust Platform</div>
+        <h1>The Science Behind<br>Trustworthy News</h1>
+        <p class="lead">A deep dive into the AI architecture, NLP pipeline, dataset, and real-time scraping infrastructure powering InfoTrust's 99.87% accuracy.</p>
+        <div class="hero-metrics">
+            <div class="hero-metric">
+                <div class="hero-metric-value">99.87%</div>
+                <div class="hero-metric-label">Accuracy</div>
+            </div>
+            <div class="hero-metric">
+                <div class="hero-metric-value">44,898</div>
+                <div class="hero-metric-label">Training Articles</div>
+            </div>
+            <div class="hero-metric">
+                <div class="hero-metric-value">&lt;2s</div>
+                <div class="hero-metric-label">Verdict Speed</div>
+            </div>
+            <div class="hero-metric">
+                <div class="hero-metric-value">BiLSTM</div>
+                <div class="hero-metric-label">Neural Network</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ OVERVIEW ══════════════════════════════════════════════════════════ -->
+<div class="row g-5 mb-5 align-items-start">
+    <div class="col-lg-7">
+        <div class="divider-label"><span>Project Overview</span></div>
+        <h2 class="section-title mb-4">What Is InfoTrust?</h2>
+        <p style="font-size:1.1rem;line-height:1.8;color:#2D3A52;margin-bottom:20px">
+            InfoTrust is an advanced web-based platform that combats the global misinformation crisis using state-of-the-art deep learning technology. At its core is a Bidirectional LSTM neural network — trained on nearly 45,000 articles — that analyses linguistic patterns, narrative structure, and contextual signals to distinguish real news from fabricated content.
+        </p>
+        <p style="font-size:0.95rem;line-height:1.8;color:#6B7A99;margin-bottom:28px">
+            In today's digital landscape, misinformation spreads faster than fact. InfoTrust provides instant, AI-backed verification so that individuals, researchers, and educators can make informed decisions before sharing content. Every article verified through our platform contributes to a growing record that helps track misinformation trends over time.
+        </p>
+        <div class="row g-3">
+            <div class="col-6">
+                <div style="background:#EEF3FF;border-radius:12px;padding:18px 20px">
+                    <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;color:#1A3FBF;line-height:1">52.3%</div>
+                    <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7A99;margin-top:4px">Dataset is Fake News</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div style="background:#ECFDF5;border-radius:12px;padding:18px 20px">
+                    <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;color:#059669;line-height:1">47.7%</div>
+                    <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7A99;margin-top:4px">Dataset is Real News</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <!-- Dataset breakdown -->
+        <div style="background:white;border:1px solid #DDE5F0;border-radius:20px;padding:32px;box-shadow:0 4px 16px rgba(15,45,107,0.06)">
+            <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#6B7A99;margin-bottom:24px">Training Dataset Breakdown</div>
+
+            <div class="dataset-bar-wrap">
+                <div class="dataset-bar-label">
+                    <span class="dataset-bar-name"><i class="fas fa-newspaper me-2" style="color:#1A3FBF"></i>Total Articles</span>
+                    <span class="dataset-bar-count" style="color:#1A3FBF">44,898</span>
+                </div>
+                <div class="dataset-bar-track"><div class="dataset-bar-fill" style="width:100%;background:#1A3FBF"></div></div>
+            </div>
+
+            <div class="dataset-bar-wrap">
+                <div class="dataset-bar-label">
+                    <span class="dataset-bar-name"><i class="fas fa-circle-xmark me-2" style="color:#E63946"></i>Fake News</span>
+                    <span class="dataset-bar-count" style="color:#E63946">23,481</span>
+                </div>
+                <div class="dataset-bar-track"><div class="dataset-bar-fill" style="width:52.3%;background:#E63946"></div></div>
+            </div>
+
+            <div class="dataset-bar-wrap">
+                <div class="dataset-bar-label">
+                    <span class="dataset-bar-name"><i class="fas fa-circle-check me-2" style="color:#059669"></i>Real News</span>
+                    <span class="dataset-bar-count" style="color:#059669">21,417</span>
+                </div>
+                <div class="dataset-bar-track"><div class="dataset-bar-fill" style="width:47.7%;background:#059669"></div></div>
+            </div>
+
+            <div style="border-top:1px solid #DDE5F0;margin:24px 0;padding-top:20px">
+                <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#6B7A99;margin-bottom:16px">Model Performance</div>
+                <div style="display:flex;gap:12px">
+                    <div style="flex:1;background:#EEF3FF;border-radius:10px;padding:14px 12px;text-align:center">
+                        <div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;color:#1A3FBF">95%+</div>
+                        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#6B7A99;margin-top:2px">Train Acc</div>
+                    </div>
+                    <div style="flex:1;background:#ECFDF5;border-radius:10px;padding:14px 12px;text-align:center">
+                        <div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;color:#059669">93%+</div>
+                        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#6B7A99;margin-top:2px">Val Acc</div>
+                    </div>
+                    <div style="flex:1;background:#FFFBEB;border-radius:10px;padding:14px 12px;text-align:center">
+                        <div style="font-family:'Fraunces',serif;font-size:1.4rem;font-weight:900;color:#D97706">99.87%</div>
+                        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#6B7A99;margin-top:2px">Test Acc</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODEL ARCHITECTURE ═════════════════════════════════════════════════ -->
+<div class="mb-5">
+    <div class="divider-label"><span>Neural Network Architecture</span></div>
+    <div class="row g-5 align-items-start">
+        <div class="col-lg-5">
+            <h2 class="section-title mb-3">Bidirectional LSTM<br>Deep Neural Network</h2>
+            <p style="font-size:0.95rem;line-height:1.75;color:#6B7A99;margin-bottom:20px">
+                Unlike standard RNNs, the BiLSTM processes text sequences in both forward and backward directions simultaneously — capturing context that appears later in the article and using it to better understand earlier passages.
+            </p>
+            <p style="font-size:0.95rem;line-height:1.75;color:#6B7A99">
+                Two stacked BiLSTM layers (128 then 64 units) extract increasingly abstract features, while dropout layers prevent overfitting. The sigmoid output maps to a probability score between 0 (real) and 1 (fake).
+            </p>
+        </div>
+        <div class="col-lg-7">
+            <div style="background:white;border:1px solid #DDE5F0;border-radius:20px;padding:28px;box-shadow:0 4px 16px rgba(15,45,107,0.06)">
+                <div class="arch-diagram">
+
+                    <div class="arch-layer arch-layer-1">
+                        <div class="arch-icon" style="color:#1A3FBF"><i class="fas fa-layer-group"></i></div>
+                        <div class="arch-label">
+                            <strong>Embedding Layer</strong>
+                            <small>Vocab: 10,000 words · 128 dimensions</small>
+                        </div>
+                        <div class="arch-badge" style="color:#1A3FBF;border-color:#1A3FBF;background:#EEF3FF">Input</div>
+                    </div>
+                    <div class="arch-connector"></div>
+
+                    <div class="arch-layer arch-layer-2">
+                        <div class="arch-icon" style="color:#6d28d9"><i class="fas fa-filter"></i></div>
+                        <div class="arch-label">
+                            <strong>Spatial Dropout</strong>
+                            <small>20% dropout rate — regularization</small>
+                        </div>
+                    </div>
+                    <div class="arch-connector"></div>
+
+                    <div class="arch-layer arch-layer-3">
+                        <div class="arch-icon" style="color:#0891b2"><i class="fas fa-arrows-left-right"></i></div>
+                        <div class="arch-label">
+                            <strong>Bidirectional LSTM</strong>
+                            <small>128 units · forward + backward pass</small>
+                        </div>
+                        <div class="arch-badge" style="color:#0891b2;border-color:#0891b2;background:#f0f9ff">BiLSTM</div>
+                    </div>
+                    <div class="arch-connector"></div>
+
+                    <div class="arch-layer arch-layer-4">
+                        <div class="arch-icon" style="color:#059669"><i class="fas fa-arrows-left-right"></i></div>
+                        <div class="arch-label">
+                            <strong>Bidirectional LSTM</strong>
+                            <small>64 units · deeper feature extraction</small>
+                        </div>
+                        <div class="arch-badge" style="color:#059669;border-color:#059669;background:#ECFDF5">BiLSTM</div>
+                    </div>
+                    <div class="arch-connector"></div>
+
+                    <div class="arch-layer arch-layer-5">
+                        <div class="arch-icon" style="color:#D97706"><i class="fas fa-circle-nodes"></i></div>
+                        <div class="arch-label">
+                            <strong>Dense Layer</strong>
+                            <small>64 units · ReLU activation</small>
+                        </div>
+                    </div>
+                    <div class="arch-connector"></div>
+
+                    <div class="arch-layer arch-layer-6">
+                        <div class="arch-icon" style="color:#E63946"><i class="fas fa-filter"></i></div>
+                        <div class="arch-label">
+                            <strong>Dropout</strong>
+                            <small>50% dropout rate — prevent overfitting</small>
+                        </div>
+                    </div>
+                    <div class="arch-connector"></div>
+
+                    <div class="arch-layer arch-layer-7">
+                        <div class="arch-icon" style="color:#f59e0b"><i class="fas fa-circle-nodes"></i></div>
+                        <div class="arch-label">
+                            <strong>Dense Layer</strong>
+                            <small>32 units · ReLU activation</small>
+                        </div>
+                    </div>
+                    <div class="arch-connector"></div>
+
+                    <div class="arch-layer arch-layer-out">
+                        <div class="arch-icon" style="color:#059669"><i class="fas fa-bullseye"></i></div>
+                        <div class="arch-label">
+                            <strong>Output Layer</strong>
+                            <small>1 unit · Sigmoid — probability score 0–1</small>
+                        </div>
+                        <div class="arch-badge" style="color:#059669;border-color:#059669;background:white">Output</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ HOW IT WORKS ═══════════════════════════════════════════════════════ -->
+<div class="mb-5" style="background:white;border:1px solid #DDE5F0;border-radius:24px;padding:48px;">
+    <div class="divider-label"><span>Verification Pipeline</span></div>
+    <div class="row g-5 align-items-start">
+        <div class="col-lg-5">
+            <h2 class="section-title mb-3">How Verification Works</h2>
+            <p style="font-size:0.95rem;line-height:1.75;color:#6B7A99">
+                Every article submitted to InfoTrust passes through a six-stage pipeline from raw text to AI verdict. Each stage is designed to maximise accuracy and minimise noise.
+            </p>
+        </div>
+        <div class="col-lg-7">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot">1</div>
+                    <div class="timeline-card">
+                        <div class="timeline-title"><i class="fas fa-cloud-arrow-down me-2 text-primary"></i>News Collection</div>
+                        <p class="timeline-desc">Articles are scraped from trusted sources — BBC, Reuters, CNN — by our automated Celery Beat scheduler that runs every hour without manual intervention.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot">2</div>
+                    <div class="timeline-card">
+                        <div class="timeline-title"><i class="fas fa-broom me-2 text-success"></i>Text Preprocessing</div>
+                        <p class="timeline-desc">Raw text is cleaned using NLTK: HTML stripping, lowercasing, special character removal, URL elimination, and whitespace normalisation.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot">3</div>
+                    <div class="timeline-card">
+                        <div class="timeline-title"><i class="fas fa-scissors me-2" style="color:#D97706"></i>Tokenization & Lemmatization</div>
+                        <p class="timeline-desc">Text is split into tokens. Stopwords are removed. WordNet lemmatization reduces words to their root form (e.g. "running" → "run") for vocabulary normalisation.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot">4</div>
+                    <div class="timeline-card">
+                        <div class="timeline-title"><i class="fas fa-hashtag me-2 text-primary"></i>Sequence Padding</div>
+                        <p class="timeline-desc">The trained Keras Tokenizer maps each word to an integer ID. Sequences are padded or truncated to a fixed length of 500 tokens for uniform model input.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot">5</div>
+                    <div class="timeline-card">
+                        <div class="timeline-title"><i class="fas fa-brain me-2" style="color:#6d28d9"></i>BiLSTM Inference</div>
+                        <p class="timeline-desc">The 7-layer Bidirectional LSTM model processes the padded sequence and outputs a probability between 0 and 1. Values above 0.5 are classified as fake.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot">6</div>
+                    <div class="timeline-card">
+                        <div class="timeline-title"><i class="fas fa-chart-bar me-2" style="color:#E63946"></i>Result Display</div>
+                        <p class="timeline-desc">The verdict, confidence score (%), and probability breakdown (fake vs real) are displayed instantly. Results are stored in the database for analytics.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ TECH STACK ══════════════════════════════════════════════════════════ -->
+<div class="mb-5">
+    <div class="divider-label"><span>Technology Stack</span></div>
+    <div class="row g-4">
+        <!-- Backend -->
+        <div class="col-lg-4 col-md-6">
+            <div class="tech-group">
+                <div class="tech-group-header">
+                    <div class="tech-group-icon" style="background:linear-gradient(135deg,#0D1B3E,#1A3FBF)"><i class="fas fa-server"></i></div>
+                    <div>
+                        <div class="tech-group-title">Backend</div>
+                        <div class="tech-group-sub">Web framework & database</div>
+                    </div>
+                </div>
+                <div class="tech-group-items">
+                    <div class="tech-row">
+                        <div class="tech-row-icon" style="background:#EEF3FF"><i class="fab fa-python" style="color:#3776ab"></i></div>
+                        <div><div class="tech-row-name">Python 3.x</div><div class="tech-row-desc">Core language</div></div>
+                    </div>
+                    <div class="tech-row">
+                        <div class="tech-row-icon" style="background:#ECFDF5"><i class="fas fa-code" style="color:#092e20"></i></div>
+                        <div><div class="tech-row-name">Django 4.2</div><div class="tech-row-desc">MVT web framework</div></div>
+                    </div>
+                    <div class="tech-row">
+                        <div class="tech-row-icon" style="background:#FFF0F1"><i class="fas fa-database" style="color:#E63946"></i></div>
+                        <div><div class="tech-row-name">SQLite</div><div class="tech-row-desc">Relational database</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ML/AI -->
+        <div class="col-lg-4 col-md-6">
+            <div class="tech-group">
+                <div class="tech-group-header">
+                    <div class="tech-group-icon" style="background:linear-gradient(135deg,#059669,#34d399)"><i class="fas fa-brain"></i></div>
+                    <div>
+                        <div class="tech-group-title">Machine Learning</div>
+                        <div class="tech-group-sub">AI model & training</div>
+                    </div>
+                </div>
+                <div class="tech-group-items">
+                    <div class="tech-row">
+                        <div class="tech-row-icon" style="background:#ECFDF5"><i class="fas fa-microchip" style="color:#ff6f00"></i></div>
+                        <div><div class="tech-row-name">TensorFlow 2 & Keras</div><div class="tech-row-desc">Deep learning framework</div></div>
+                    </div>
+                    <div class="tech-row">
+                        <div class="tech-row-icon" style="background:#FFFBEB"><i class="fas fa-chart-line" style="color:#D97706"></i></div>
+                        <div><div class="tech-row-name">Scikit-learn</div><div class="tech-row-desc">Evaluation metrics</div></div>
+                    </div>
+                    <div class="tech-row">
+                        <div class="tech-row-icon" style="background:#EEF3FF"><i class="fas fa-arrows-left-right" style="color:#1A3FBF"></i></div>
+                        <div><div class="tech-row-name">Bidirectional LSTM</div><div class="tech-row-desc">Core neural architecture</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NLP + Celery -->
+        <div class="col-lg-4 col-md-6">
+            <div class="tech-group">
+                <div class="tech-group-header">
+                    <div class="tech-group-icon" style="background:linear-gradient(135deg,#D97706,#fbbf24)"><i class="fas fa-language"></i></div>
+                    <div>
+                        <div class="tech-group-title">NLP & Automation</div>
+                        <div class="tech-group-sub">Text processing & tasks</div>
+                    </div>
+                </div>
+                <div class="tech-group-items">
+                    <div class="tech-row">
+                        <div class="tech-row-icon" style="background:#FFFBEB"><i class="fas fa-language" style="color:#D97706"></i></div>
+                        <div><div class="tech-row-name">NLTK</div><div class="tech-row-desc">Tokenization & lemmatization</div></div>
+                    </div>
+                    <div class="tech-row">
+                        <div class="tech-row-icon" style="background:#ECFDF5"><i class="fas fa-clock-rotate-left" style="color:#059669"></i></div>
+                        <div><div class="tech-row-name">Celery + Redis</div><div class="tech-row-desc">Hourly scheduled scraping</div></div>
+                    </div>
+                    <div class="tech-row">
+                        <div class="tech-row-icon" style="background:#FFF0F1"><i class="fas fa-spider" style="color:#E63946"></i></div>
+                        <div><div class="tech-row-name">BeautifulSoup 4</div><div class="tech-row-desc">HTML parsing & scraping</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ CELERY / REAL-TIME SCRAPING ═══════════════════════════════════════ -->
+<div class="mb-5">
+    <div class="divider-label"><span>Real-Time Scraping Infrastructure</span></div>
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-5">
+            <h2 class="section-title mb-3">Automated Hourly<br>News Collection</h2>
+            <p style="font-size:0.95rem;line-height:1.75;color:#6B7A99;margin-bottom:20px">
+                InfoTrust uses <strong>Celery</strong> — a distributed task queue — backed by <strong>Redis</strong> as the message broker to run fully automated scraping jobs every hour, completely without manual intervention.
+            </p>
+            <p style="font-size:0.95rem;line-height:1.75;color:#6B7A99;margin-bottom:28px">
+                The Celery Beat scheduler dispatches the <code style="background:#F0F4FF;padding:2px 6px;border-radius:4px;font-size:0.85rem;color:#1A3FBF">auto_scrape_news</code> task at the top of every hour. The worker picks it up, scrapes all configured sources, verifies each article with the AI model, deduplicates, and logs the run — all in the background while the web server continues handling requests normally.
+            </p>
+            <div style="background:#F8FAFF;border:1px solid #DDE5F0;border-radius:12px;padding:20px;font-family:monospace;font-size:0.82rem;color:#0D1B3E;line-height:2">
+                <span style="color:#6B7A99"># Start Redis (Docker)</span><br>
+                <span style="color:#059669">docker run -p 6379:6379 redis</span><br>
+                <br>
+                <span style="color:#6B7A99"># Start Celery worker</span><br>
+                <span style="color:#1A3FBF">celery -A fake_news_detector worker --loglevel=info</span><br>
+                <br>
+                <span style="color:#6B7A99"># Start Beat scheduler</span><br>
+                <span style="color:#1A3FBF">celery -A fake_news_detector beat --loglevel=info</span>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="celery-card">
+                <div class="celery-badge"><i class="fas fa-circle me-1" style="font-size:0.5rem"></i> Live Automation</div>
+                <h5 style="font-family:'Fraunces',serif;font-weight:800;color:#0D1B3E;margin-bottom:20px;letter-spacing:-0.02em">Scheduled Tasks</h5>
+
+                <div class="celery-schedule-item">
+                    <div class="celery-sched-icon"><i class="fas fa-clock"></i></div>
+                    <div>
+                        <div class="celery-sched-title">auto_scrape_news</div>
+                        <div class="celery-sched-desc">Runs every hour on the hour via Celery Beat crontab(minute=0). Scrapes BBC, Reuters, CNN and verifies each article.</div>
+                    </div>
+                </div>
+
+                <div class="celery-schedule-item">
+                    <div class="celery-sched-icon"><i class="fas fa-copy"></i></div>
+                    <div>
+                        <div class="celery-sched-title">Duplicate Detection</div>
+                        <div class="celery-sched-desc">Articles already in the database (matched by title) are automatically skipped to avoid redundant AI inference.</div>
+                    </div>
+                </div>
+
+                <div class="celery-schedule-item">
+                    <div class="celery-sched-icon"><i class="fas fa-rotate-right"></i></div>
+                    <div>
+                        <div class="celery-sched-title">Auto-Retry on Failure</div>
+                        <div class="celery-sched-desc">If the task fails (e.g. network error), Celery automatically retries up to 3 times with a 5-minute cooldown between attempts.</div>
+                    </div>
+                </div>
+
+                <div class="celery-schedule-item">
+                    <div class="celery-sched-icon"><i class="fas fa-list-check"></i></div>
+                    <div>
+                        <div class="celery-sched-title">ScrapingLog Audit Trail</div>
+                        <div class="celery-sched-desc">Every run (scheduled or manual) writes a log entry with status, articles saved/skipped/errored, and duration — visible on the Statistics page.</div>
+                    </div>
+                </div>
+
+                <div class="celery-schedule-item">
+                    <div class="celery-sched-icon"><i class="fas fa-bolt"></i></div>
+                    <div>
+                        <div class="celery-sched-title">Manual Trigger Available</div>
+                        <div class="celery-sched-desc">The Scrape News page also lets you dispatch the task on-demand via a single button click, without waiting for the scheduled run.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MISSION ════════════════════════════════════════════════════════════ -->
+<div class="mission-band">
+    <div class="mission-band-content">
+        <div class="mission-icon"><i class="fas fa-heart"></i></div>
+        <h2 style="font-family:'Fraunces',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:900;color:white;letter-spacing:-0.03em;margin-bottom:20px">Our Mission</h2>
+        <p style="font-size:1.1rem;color:rgba(255,255,255,0.75);max-width:600px;margin:0 auto 36px;line-height:1.8">
+            To combat misinformation and empower every person with AI-driven tools to verify news authenticity — fostering a more informed, responsible, and resilient digital society.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="{% url 'verify_news' %}" class="btn btn-light btn-lg px-5">
+                <i class="fas fa-magnifying-glass me-2"></i> Verify an Article
+            </a>
+            <a href="{% url 'statistics' %}" class="btn btn-outline-light btn-lg px-5">
+                <i class="fas fa-chart-bar me-2"></i> View Statistics
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

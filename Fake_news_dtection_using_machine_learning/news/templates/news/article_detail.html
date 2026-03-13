@@ -1,0 +1,200 @@
+{% extends 'news/base.html' %}
+{% load news_extras %}
+{% block title %}{{ article.title|truncatechars:60 }} — InfoTrust{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-banner {
+  border-radius: var(--r-md); padding: 16px 20px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 16px; font-size: 0.9rem;
+  border: 1px solid;
+}
+.detail-banner.real    { background: var(--green-soft); border-color: rgba(5,150,105,0.2); color: #065f46; }
+.detail-banner.fake    { background: var(--red-soft);   border-color: rgba(230,57,70,0.2);  color: #9b1c1c; }
+.detail-banner.unverified { background: var(--amber-soft); border-color: rgba(217,119,6,0.2); color: #78350f; }
+.detail-banner-icon { font-size: 1.6rem; flex-shrink: 0; }
+.detail-banner-text strong { display: block; font-weight: 800; font-size: 0.95rem; margin-bottom: 2px; }
+
+.detail-meta-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+  gap: 16px; background: var(--bg-page); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 24px; margin-bottom: 32px;
+}
+.detail-meta-item { display: flex; align-items: center; gap: 12px; }
+.detail-meta-icon {
+  width: 40px; height: 40px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: white; flex-shrink: 0;
+}
+.detail-meta-icon.blue   { background: var(--blue-royal); }
+.detail-meta-icon.green  { background: var(--green-vivid); }
+.detail-meta-icon.amber  { background: var(--amber-vivid); }
+.detail-meta-icon.teal   { background: #0891b2; }
+.detail-meta-key   { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 2px; }
+.detail-meta-val   { font-weight: 700; font-size: 0.9rem; color: var(--text-dark); }
+.detail-meta-val a { color: var(--blue-royal); }
+
+.detail-content {
+  font-size: 1.05rem; line-height: 1.9; color: var(--text-body);
+  border-top: 1px solid var(--border); padding-top: 28px; margin-top: 4px;
+}
+.detail-content p { margin-bottom: 1.4rem; }
+
+.verdict-card {
+  border-radius: var(--r-md); padding: 28px 32px; border: 1px solid;
+  margin-bottom: 24px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+}
+.verdict-card.real    { background: var(--green-soft); border-color: rgba(5,150,105,0.2); }
+.verdict-card.fake    { background: var(--red-soft);   border-color: rgba(230,57,70,0.2); }
+.verdict-card.unverified { background: var(--amber-soft); border-color: rgba(217,119,6,0.2); }
+
+.verdict-badge-circle {
+  width: 100px; height: 100px; border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 2rem; color: white; flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.verdict-card.real    .verdict-badge-circle { background: linear-gradient(135deg,var(--green-vivid),#34d399); }
+.verdict-card.fake    .verdict-badge-circle { background: linear-gradient(135deg,var(--red-vivid),#f87171); }
+.verdict-card.unverified .verdict-badge-circle { background: linear-gradient(135deg,var(--amber-vivid),#fbbf24); }
+.verdict-badge-circle span { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; margin-top: 4px; }
+
+.conf-track { height: 12px; background: rgba(0,0,0,0.08); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+.conf-fill  { height: 100%; border-radius: 99px; position: relative; overflow: hidden; }
+.conf-fill::after { content:''; position:absolute; inset:0; background: linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent); animation: shimmer 2s infinite; }
+@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+.conf-fill.real    { background: linear-gradient(90deg,var(--green-vivid),#34d399); }
+.conf-fill.fake    { background: linear-gradient(90deg,var(--red-vivid),#f87171); }
+.conf-fill.unverified { background: linear-gradient(90deg,var(--amber-vivid),#fbbf24); }
+
+@media(max-width:576px) {
+  .verdict-card { flex-direction: column; }
+  .detail-meta-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="col-lg-9 col-xl-8 mx-auto">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb animate-fade-in" aria-label="breadcrumb">
+    <a class="breadcrumb-item" href="{% url 'home' %}"><i class="fas fa-house"></i> Home</a>
+    <a class="breadcrumb-item" href="{% url 'news_feed' %}"><i class="fas fa-newspaper"></i> News Feed</a>
+    <span class="breadcrumb-item active">Article</span>
+  </nav>
+
+  <!-- Authenticity banner -->
+  {% if article.authenticity == 'real' %}
+  <div class="detail-banner real animate-slide-down">
+    <div class="detail-banner-icon"><i class="fas fa-shield-check"></i></div>
+    <div class="detail-banner-text">
+      <strong><i class="fas fa-check-circle me-1"></i> Verified as REAL NEWS</strong>
+      This article has been verified as authentic by the BiLSTM AI model.
+    </div>
+  </div>
+  {% elif article.authenticity == 'fake' %}
+  <div class="detail-banner fake animate-slide-down">
+    <div class="detail-banner-icon"><i class="fas fa-triangle-exclamation"></i></div>
+    <div class="detail-banner-text">
+      <strong><i class="fas fa-circle-xmark me-1"></i> Identified as FAKE NEWS</strong>
+      This article has been flagged as fake or misleading by the AI model.
+    </div>
+  </div>
+  {% else %}
+  <div class="detail-banner unverified animate-slide-down">
+    <div class="detail-banner-icon"><i class="fas fa-circle-question"></i></div>
+    <div class="detail-banner-text">
+      <strong><i class="fas fa-hourglass-half me-1"></i> UNVERIFIED</strong>
+      This article has not yet been processed by the AI verification system.
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Article -->
+  <div class="card animate-fade-in" style="margin-bottom:24px">
+    <div class="card-body" style="padding:36px 40px">
+
+      <!-- Category pill -->
+      <span class="badge badge-primary" style="margin-bottom:20px">
+        <i class="fas fa-tag"></i> {{ article.category|title }}
+      </span>
+
+      <!-- Title -->
+      <h1 style="font-family:var(--font-display);font-size:clamp(1.6rem,4vw,2.4rem);font-weight:900;color:var(--text-dark);line-height:1.15;letter-spacing:-0.03em;margin-bottom:24px">
+        {{ article.title }}
+      </h1>
+
+      <!-- Meta grid -->
+      <div class="detail-meta-grid">
+        <div class="detail-meta-item">
+          <div class="detail-meta-icon blue"><i class="fas fa-globe"></i></div>
+          <div><div class="detail-meta-key">Source</div><div class="detail-meta-val"><a href="{{ article.source_url }}" target="_blank">{{ article.source_name }}</a></div></div>
+        </div>
+        <div class="detail-meta-item">
+          <div class="detail-meta-icon green"><i class="fas fa-calendar"></i></div>
+          <div><div class="detail-meta-key">Published</div><div class="detail-meta-val">{% if article.published_date %}{{ article.published_date|date:"F d, Y" }}{% else %}Unknown{% endif %}</div></div>
+        </div>
+        <div class="detail-meta-item">
+          <div class="detail-meta-icon teal"><i class="fas fa-clock-rotate-left"></i></div>
+          <div><div class="detail-meta-key">Scraped</div><div class="detail-meta-val">{{ article.scraped_date|date:"M d, Y" }}</div></div>
+        </div>
+        {% if article.confidence_score %}
+        <div class="detail-meta-item">
+          <div class="detail-meta-icon amber"><i class="fas fa-chart-bar"></i></div>
+          <div><div class="detail-meta-key">Confidence</div><div class="detail-meta-val">{{ article.confidence_score|as_percent|floatformat:2 }}%</div></div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Article body -->
+      <div class="detail-content">{{ article.content|linebreaks }}</div>
+    </div>
+  </div>
+
+  <!-- AI Verdict card -->
+  {% if article.confidence_score %}
+  <div class="verdict-card {{ article.authenticity }} animate-fade-in" style="margin-bottom:24px">
+    <div class="verdict-badge-circle">
+      {% if article.authenticity == 'real' %}
+        <i class="fas fa-check"></i><span>REAL</span>
+      {% elif article.authenticity == 'fake' %}
+        <i class="fas fa-times"></i><span>FAKE</span>
+      {% else %}
+        <i class="fas fa-question"></i><span>—</span>
+      {% endif %}
+    </div>
+    <div style="flex:1;min-width:200px">
+      <h5 style="font-family:var(--font-display);font-weight:800;color:var(--text-dark);margin-bottom:6px;letter-spacing:-0.02em">
+        <i class="fas fa-brain me-2"></i> AI Verification Analysis
+      </h5>
+      <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:14px;line-height:1.65">
+        The <strong>Bidirectional LSTM</strong> model analysed linguistic patterns and contextual signals to produce a
+        <strong>{{ article.confidence_score|as_percent|floatformat:1 }}%</strong> confidence verdict.
+      </p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:0.8rem;font-weight:700;color:var(--text-muted)">
+        <span>Confidence Score</span>
+        <span style="color:var(--text-dark);font-size:0.95rem">{{ article.confidence_score|as_percent|floatformat:1 }}%</span>
+      </div>
+      <div class="conf-track">
+        <div class="conf-fill {{ article.authenticity }}" style="width:{{ article.confidence_score|as_percent|floatformat:0 }}%"></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Actions -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px" class="animate-fade-in">
+    <a href="{{ article.source_url }}" target="_blank" class="btn btn-primary btn-lg" style="flex:1;min-width:180px">
+      <i class="fas fa-arrow-up-right-from-square"></i> Original Source
+    </a>
+    <a href="{% url 'verify_news' %}" class="btn btn-success btn-lg" style="flex:1;min-width:180px">
+      <i class="fas fa-magnifying-glass"></i> Verify Another
+    </a>
+    <a href="{% url 'news_feed' %}" class="btn btn-outline-secondary btn-lg" style="flex:1;min-width:180px">
+      <i class="fas fa-arrow-left"></i> Back to Feed
+    </a>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,660 @@
+{% extends 'news/base.html' %}
+{% block title %}InfoTrust — AI-Powered Fake News Detection{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Landing-page-only styles */
+.hero-grid-bg {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+}
+.hero-grid-bg svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.3; }
+
+.floating-card {
+  background: white; border-radius: 14px; box-shadow: 0 8px 32px rgba(15,45,107,0.15);
+  border: 1px solid #DDE5F0; padding: 18px 22px;
+  display: flex; align-items: center; gap: 14px;
+  position: absolute; animation: float-y 5s ease-in-out infinite;
+}
+.floating-card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.floating-card-text strong { display: block; font-size: 0.85rem; font-weight: 800; color: #0D1B3E; }
+.floating-card-text span { font-size: 0.75rem; color: #6B7A99; font-weight: 500; }
+
+@keyframes float-y {
+  0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)}
+}
+
+.scanner-demo {
+  background: white; border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(15,45,107,0.18);
+  border: 1px solid #DDE5F0; overflow: hidden;
+  position: relative;
+}
+.scanner-topbar {
+  background: #F4F7FF; border-bottom: 1px solid #DDE5F0;
+  padding: 14px 20px; display: flex; align-items: center; gap: 10px;
+}
+.dot-red{width:12px;height:12px;border-radius:50%;background:#E63946;}
+.dot-yellow{width:12px;height:12px;border-radius:50%;background:#D97706;}
+.dot-green{width:12px;height:12px;border-radius:50%;background:#059669;}
+
+.scanner-body { padding: 28px; }
+.scan-input-mock {
+  border: 1.5px solid #DDE5F0; border-radius: 10px;
+  padding: 14px 16px; font-size: 0.85rem;
+  color: #6B7A99; margin-bottom: 14px;
+  background: #F8FAFF; line-height: 1.6;
+}
+.scan-progress { background: #F0F4FF; border-radius: 99px; height: 8px; overflow: hidden; margin-bottom: 8px; }
+.scan-progress-bar {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg,#1A3FBF,#2B5CE6);
+  width: 0%; animation: scan-fill 2.5s ease-out 0.5s forwards;
+}
+@keyframes scan-fill { to{width:100%} }
+
+.scan-result {
+  background: #ECFDF5; border: 1px solid rgba(5,150,105,0.25);
+  border-radius: 12px; padding: 18px 20px; margin-top: 16px;
+  display: flex; align-items: center; gap: 16px;
+  opacity: 0; animation: fadeIn 0.5s ease-out 3s forwards;
+}
+.scan-result-icon { font-size: 2rem; color: #059669; }
+.scan-result-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #059669; margin-bottom: 2px; }
+.scan-result-title { font-size: 1.05rem; font-weight: 800; color: #0D1B3E; font-family: 'Fraunces', serif; }
+.scan-confidence { display: inline-flex; align-items: center; gap: 6px; background: white; border-radius: 99px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; color: #059669; margin-top: 6px; border: 1px solid rgba(5,150,105,0.2); }
+
+/* METRICS SECTION */
+.metric-card {
+  background: white; border-radius: 16px; padding: 32px 28px;
+  border: 1px solid #DDE5F0; text-align: center; position: relative; overflow: hidden;
+  transition: all 250ms cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 2px 8px rgba(15,45,107,0.06);
+}
+.metric-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(15,45,107,0.14); }
+.metric-value {
+  font-family: 'Fraunces', serif; font-size: 3.5rem; font-weight: 900;
+  line-height: 1; letter-spacing: -0.05em; margin-bottom: 8px;
+}
+.metric-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6B7A99; }
+.metric-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; background: #ECFDF5; color: #059669; border-radius: 99px; padding: 4px 10px; font-size: 0.72rem; font-weight: 700; }
+
+/* HOW IT WORKS VISUAL */
+.hiw-visual {
+  background: white; border-radius: 16px; padding: 28px;
+  border: 1px solid #DDE5F0; box-shadow: 0 4px 16px rgba(15,45,107,0.08);
+  height: 100%;
+}
+.hiw-img-placeholder {
+  border-radius: 12px; overflow: hidden;
+  background: linear-gradient(135deg,#EEF3FF,#F4F7FF);
+  display: flex; align-items: center; justify-content: center;
+  height: 300px; position: relative;
+}
+.hiw-icon-cluster { position: relative; width: 180px; height: 180px; margin: 0 auto; }
+.hiw-center-icon {
+  width: 72px; height: 72px; background: #1A3FBF; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; color: white; position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  box-shadow: 0 8px 24px rgba(26,63,191,0.35);
+  animation: pulse-ring 2.5s ease-in-out infinite;
+}
+@keyframes pulse-ring {
+  0%,100%{box-shadow:0 8px 24px rgba(26,63,191,0.35),0 0 0 0 rgba(26,63,191,0.15)}
+  50%{box-shadow:0 8px 24px rgba(26,63,191,0.35),0 0 0 20px rgba(26,63,191,0)}
+}
+.orbit-icon {
+  width: 44px; height: 44px; background: white;
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; position: absolute; box-shadow: 0 4px 12px rgba(15,45,107,0.12);
+  border: 1px solid #DDE5F0; animation: orbit-spin 8s linear infinite;
+}
+.orbit-icon:nth-child(2){top:-8px;left:50%;transform:translateX(-50%);animation-delay:-2s;color:#1A3FBF;}
+.orbit-icon:nth-child(3){top:50%;right:-8px;transform:translateY(-50%);animation-delay:-4s;color:#059669;}
+.orbit-icon:nth-child(4){bottom:-8px;left:50%;transform:translateX(-50%);animation-delay:-6s;color:#D97706;}
+.orbit-icon:nth-child(5){top:50%;left:-8px;transform:translateY(-50%);color:#E63946;}
+@keyframes orbit-spin {
+  0%,100%{transform:scale(1)} 50%{transform:scale(1.12)}
+}
+
+/* TESTIMONIAL / TRUST */
+.trust-card {
+  background: white; border-radius: 16px; padding: 28px;
+  border: 1px solid #DDE5F0; box-shadow: 0 2px 8px rgba(15,45,107,0.06);
+  transition: all 250ms ease;
+}
+.trust-card:hover { box-shadow: 0 8px 28px rgba(15,45,107,0.12); transform: translateY(-2px); }
+.trust-quote { font-family: 'Fraunces', serif; font-size: 1.05rem; font-style: italic; color: #2D3A52; line-height: 1.7; margin-bottom: 20px; }
+.trust-author { display: flex; align-items: center; gap: 12px; }
+.trust-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; color: white; font-family: 'Fraunces', serif; }
+.trust-name { font-weight: 700; font-size: 0.9rem; color: #0D1B3E; }
+.trust-role { font-size: 0.78rem; color: #6B7A99; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ==========================================
+     HERO SECTION
+     ========================================== -->
+<section class="hero-section" style="margin: -40px -24px 0; padding: 100px 24px 90px;">
+    <div class="hero-grid-bg">
+        <svg viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <pattern id="grid" x="0" y="0" width="48" height="48" patternUnits="userSpaceOnUse">
+                    <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#1A3FBF" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <rect width="1200" height="600" fill="url(#grid)"/>
+        </svg>
+    </div>
+
+    <div class="container" style="position:relative;z-index:1">
+        <div class="row align-items-center g-5">
+            <!-- Left: Copy -->
+            <div class="col-lg-6">
+                <div class="hero-eyebrow">
+                    <span class="dot"></span>
+                    AI-Powered · 99.87% Accurate · Real-Time
+                </div>
+
+                <h1 class="hero-title">
+                    Stop <span class="accent">Fake News</span><br>
+                    Before It Spreads
+                </h1>
+
+                <p class="hero-lead">
+                    InfoTrust uses a Bidirectional LSTM neural network trained on 44,908 articles to verify any news content in under 2 seconds — with precision that rivals professional fact-checkers.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="{% url 'verify_news' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-magnifying-glass"></i> Verify an Article
+                    </a>
+                    <a href="{% url 'news_feed' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-newspaper"></i> Browse News Feed
+                    </a>
+                </div>
+
+                <div class="hero-badge-live">
+                    <i class="fas fa-circle-check"></i>
+                    Verified by AI — Trusted by Researchers
+                </div>
+            </div>
+
+            <!-- Right: Animated Scanner Demo -->
+            <div class="col-lg-6 position-relative">
+                <!-- Floating Card: Verified -->
+                <div class="floating-card" style="top:-20px;right:20px;animation-delay:-1.5s;z-index:2">
+                    <div class="floating-card-icon" style="background:#ECFDF5;color:#059669">
+                        <i class="fas fa-circle-check"></i>
+                    </div>
+                    <div class="floating-card-text">
+                        <strong>Verified Authentic</strong>
+                        <span>Confidence: 98.3%</span>
+                    </div>
+                </div>
+
+                <!-- Floating Card: Fake Detected -->
+                <div class="floating-card" style="bottom:10px;left:-10px;animation-delay:-3s;z-index:2">
+                    <div class="floating-card-icon" style="background:#FFF0F1;color:#E63946">
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="floating-card-text">
+                        <strong>Fake Detected</strong>
+                        <span>Confidence: 96.7%</span>
+                    </div>
+                </div>
+
+                <!-- Scanner Demo Card -->
+                <div class="scanner-demo" style="position:relative;z-index:1">
+                    <div class="scanner-topbar">
+                        <div class="dot-red"></div>
+                        <div class="dot-yellow"></div>
+                        <div class="dot-green"></div>
+                        <span style="margin-left:12px;font-size:0.8rem;font-weight:600;color:#6B7A99;">InfoTrust Verification Engine</span>
+                    </div>
+                    <div class="scanner-body">
+                        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6B7A99;margin-bottom:8px">
+                            Article Content
+                        </div>
+                        <div class="scan-input-mock">
+                            Scientists announce breakthrough in renewable energy storage with new silicon-based battery technology that promises 10x capacity over current lithium-ion solutions...
+                        </div>
+                        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#1A3FBF;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                            <i class="fas fa-spinner fa-spin" style="font-size:0.7rem"></i> Analyzing with AI Model
+                        </div>
+                        <div class="scan-progress">
+                            <div class="scan-progress-bar"></div>
+                        </div>
+                        <div style="font-size:0.75rem;color:#6B7A99;margin-bottom:4px;">NLP Preprocessing → Tokenization → LSTM Analysis</div>
+                        <div class="scan-result">
+                            <div class="scan-result-icon"><i class="fas fa-shield-halved"></i></div>
+                            <div>
+                                <div class="scan-result-label">Verified Result</div>
+                                <div class="scan-result-title">Authentic News</div>
+                                <div class="scan-confidence">
+                                    <i class="fas fa-circle-check"></i> 97.4% Confidence
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================
+     TRUST BAR
+     ========================================== -->
+<div class="trust-bar" style="margin: 0 -24px;">
+    <div class="trust-bar-track">
+        <!-- duplicated for infinite scroll -->
+        {% for _ in "12345678" %}
+        <div class="trust-item"><i class="fas fa-circle-check"></i> 99.87% Accuracy</div>
+        <div class="trust-item"><i class="fas fa-bolt"></i> Under 2s Verification</div>
+        <div class="trust-item"><i class="fas fa-database"></i> 44,908 Training Articles</div>
+        <div class="trust-item"><i class="fas fa-brain"></i> Bidirectional LSTM</div>
+        <div class="trust-item"><i class="fas fa-newspaper"></i> BBC · Reuters · CNN</div>
+        <div class="trust-item"><i class="fas fa-shield-halved"></i> Real-time Detection</div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ==========================================
+     METRICS
+     ========================================== -->
+<section class="section" style="padding-top: 80px;">
+    <div class="row g-4">
+        <div class="col-md-3 col-6">
+            <div class="metric-card">
+                <div class="metric-value" style="color:#1A3FBF">99.87<span style="font-size:2rem">%</span></div>
+                <div class="metric-label">Accuracy Rate</div>
+                <div class="metric-badge"><i class="fas fa-arrow-trend-up"></i> Top-tier precision</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="metric-card">
+                <div class="metric-value" style="color:#059669">44K<span style="font-size:2rem">+</span></div>
+                <div class="metric-label">Training Articles</div>
+                <div class="metric-badge"><i class="fas fa-database"></i> Diverse dataset</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="metric-card">
+                <div class="metric-value" style="color:#D97706">&lt;2<span style="font-size:2rem">s</span></div>
+                <div class="metric-label">Verification Time</div>
+                <div class="metric-badge" style="background:#FFFBEB;color:#D97706"><i class="fas fa-bolt"></i> Instant results</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="metric-card">
+                <div class="metric-value" style="color:#E63946">3</div>
+                <div class="metric-label">News Sources</div>
+                <div class="metric-badge" style="background:#FFF0F1;color:#E63946"><i class="fas fa-globe"></i> Trusted outlets</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================
+     FEATURES
+     ========================================== -->
+<section class="section section-alt" style="margin: 0 -24px; padding-left: 24px; padding-right: 24px;">
+    <div class="section-header section-header-center">
+        <div class="section-label">What We Offer</div>
+        <h2 class="section-title">Everything You Need to<br>Fight Misinformation</h2>
+        <p class="section-desc">A complete platform built around one goal: giving you the truth, instantly.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="feature-card">
+                <div class="feature-icon feature-icon-blue">
+                    <i class="fas fa-magnifying-glass-chart"></i>
+                </div>
+                <div class="feature-title">Instant AI Verification</div>
+                <p class="feature-desc">
+                    Paste any article and receive an AI verdict in seconds. Our Bidirectional LSTM model delivers probability breakdowns and confidence scores you can trust.
+                </p>
+                <a href="{% url 'verify_news' %}" class="feature-link">
+                    Try Verification <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="feature-card">
+                <div class="feature-icon feature-icon-green">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <div class="feature-title">Curated News Feed</div>
+                <p class="feature-desc">
+                    Browse pre-verified articles from BBC, Reuters, and CNN — all automatically analyzed by our AI so you know what's real before you read.
+                </p>
+                <a href="{% url 'news_feed' %}" class="feature-link">
+                    Browse Feed <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="feature-card">
+                <div class="feature-icon feature-icon-amber">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="feature-title">Deep Learning AI</div>
+                <p class="feature-desc">
+                    Powered by a Bidirectional LSTM trained on 44,908 diverse articles, with advanced NLP preprocessing using NLTK for tokenization and lemmatization.
+                </p>
+                <a href="{% url 'about' %}" class="feature-link">
+                    Learn More <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="feature-card">
+                <div class="feature-icon feature-icon-red">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="feature-title">Analytics Dashboard</div>
+                <p class="feature-desc">
+                    Explore comprehensive statistics: model performance graphs, prediction distributions, ROC curves, confusion matrices, and article trend analysis.
+                </p>
+                <a href="{% url 'statistics' %}" class="feature-link">
+                    View Statistics <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="feature-card">
+                <div class="feature-icon feature-icon-blue">
+                    <i class="fas fa-language"></i>
+                </div>
+                <div class="feature-title">Advanced NLP Pipeline</div>
+                <p class="feature-desc">
+                    Every article passes through our full NLP pipeline: cleaning, tokenization, stopword removal, and lemmatization for optimal model input quality.
+                </p>
+                <a href="{% url 'about' %}" class="feature-link">
+                    Technical Details <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6">
+            <div class="feature-card">
+                <div class="feature-icon feature-icon-green">
+                    <i class="fas fa-cloud-arrow-down"></i>
+                </div>
+                <div class="feature-title">Live News Scraping</div>
+                <p class="feature-desc">
+                    Automatically fetch and verify the latest articles from trusted sources. Our scraper keeps the platform fresh with real-time verified content.
+                </p>
+                <a href="{% url 'scrape_news' %}" class="feature-link">
+                    Scrape Now <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================
+     HOW IT WORKS
+     ========================================== -->
+<section class="section">
+    <div class="row g-5 align-items-center">
+        <!-- Steps -->
+        <div class="col-lg-6">
+            <div class="section-label">The Process</div>
+            <h2 class="section-title">From Article to<br>Verdict in 4 Steps</h2>
+            <p class="section-desc mb-5">Our rigorous AI pipeline ensures every result is consistent, reliable, and backed by science.</p>
+
+            <div class="process-step">
+                <div class="step-number-wrap">
+                    <div class="step-number step-number-1">1</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-title">Submit Your Article</div>
+                    <p class="step-desc">Paste any news content into our verification tool, or browse directly from our curated feed of pre-verified articles from top outlets.</p>
+                </div>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number-wrap">
+                    <div class="step-number step-number-2">2</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-title">NLP Preprocessing</div>
+                    <p class="step-desc">NLTK cleans and tokenizes the text: stopword removal, punctuation stripping, and WordNet lemmatization prepare it for the neural network.</p>
+                </div>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number-wrap">
+                    <div class="step-number step-number-3">3</div>
+                    <div class="step-connector"></div>
+                </div>
+                <div class="step-content">
+                    <div class="step-title">AI Model Analysis</div>
+                    <p class="step-desc">Our Bidirectional LSTM processes word sequences in both directions, capturing context and linguistic patterns that characterize fake versus real news.</p>
+                </div>
+            </div>
+
+            <div class="process-step">
+                <div class="step-number-wrap">
+                    <div class="step-number step-number-4">4</div>
+                </div>
+                <div class="step-content">
+                    <div class="step-title">Instant Verdict</div>
+                    <p class="step-desc">Receive a clear authentic/fake classification with a confidence score, probability breakdown, and actionable recommendations — in under 2 seconds.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual -->
+        <div class="col-lg-6">
+            <div class="hiw-visual">
+                <div class="hiw-img-placeholder mb-4">
+                    <div class="hiw-icon-cluster">
+                        <div class="hiw-center-icon">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <div class="orbit-icon"><i class="fas fa-file-lines"></i></div>
+                        <div class="orbit-icon"><i class="fas fa-circle-check"></i></div>
+                        <div class="orbit-icon"><i class="fas fa-chart-simple"></i></div>
+                        <div class="orbit-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                    </div>
+                </div>
+
+                <!-- Mini stats inside card -->
+                <div class="row g-3 text-center">
+                    <div class="col-4">
+                        <div style="background:#F4F7FF;border-radius:12px;padding:16px 8px;">
+                            <div style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:900;color:#1A3FBF">BiLSTM</div>
+                            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7A99;margin-top:4px">Neural Net</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div style="background:#ECFDF5;border-radius:12px;padding:16px 8px;">
+                            <div style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:900;color:#059669">NLTK</div>
+                            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7A99;margin-top:4px">NLP Engine</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div style="background:#FFFBEB;border-radius:12px;padding:16px 8px;">
+                            <div style="font-family:'Fraunces',serif;font-size:1.5rem;font-weight:900;color:#D97706">TF 2</div>
+                            <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#6B7A99;margin-top:4px">Framework</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================
+     TECH STACK
+     ========================================== -->
+<section class="section section-alt" style="margin: 0 -24px; padding-left: 24px; padding-right: 24px;">
+    <div class="section-header section-header-center">
+        <div class="section-label">Built With</div>
+        <h2 class="section-title">Industry-Leading Technology</h2>
+        <p class="section-desc">Every layer of the stack chosen for reliability, performance, and accuracy.</p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="tech-pill w-100">
+                <i class="fas fa-brain text-primary"></i>
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem">TensorFlow & Keras</div>
+                    <div style="font-size:0.75rem;color:#6B7A99;font-weight:500">Deep Learning Framework</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="tech-pill w-100">
+                <i class="fab fa-python" style="color:#3776ab"></i>
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem">Python 3.x</div>
+                    <div style="font-size:0.75rem;color:#6B7A99;font-weight:500">Core Language</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="tech-pill w-100">
+                <i class="fas fa-server" style="color:#092e20"></i>
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem">Django 4.2</div>
+                    <div style="font-size:0.75rem;color:#6B7A99;font-weight:500">Web Framework</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="tech-pill w-100">
+                <i class="fas fa-language" style="color:#059669"></i>
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem">NLTK</div>
+                    <div style="font-size:0.75rem;color:#6B7A99;font-weight:500">NLP Toolkit</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="tech-pill w-100">
+                <i class="fas fa-chart-bar" style="color:#D97706"></i>
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem">Scikit-learn</div>
+                    <div style="font-size:0.75rem;color:#6B7A99;font-weight:500">Machine Learning</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="tech-pill w-100">
+                <i class="fas fa-database" style="color:#E63946"></i>
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem">SQLite</div>
+                    <div style="font-size:0.75rem;color:#6B7A99;font-weight:500">Database</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="tech-pill w-100">
+                <i class="fab fa-bootstrap" style="color:#7952b3"></i>
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem">Bootstrap 5</div>
+                    <div style="font-size:0.75rem;color:#6B7A99;font-weight:500">UI Framework</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-4 col-6">
+            <div class="tech-pill w-100">
+                <i class="fas fa-chart-line" style="color:#E63946"></i>
+                <div>
+                    <div style="font-weight:700;font-size:0.9rem">Chart.js</div>
+                    <div style="font-size:0.75rem;color:#6B7A99;font-weight:500">Data Visualization</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================
+     TRUST / USE CASES
+     ========================================== -->
+<section class="section">
+    <div class="section-header section-header-center">
+        <div class="section-label">Why It Matters</div>
+        <h2 class="section-title">Trusted by Those Who<br>Care About Truth</h2>
+        <p class="section-desc">From students to journalists, InfoTrust is built for anyone who needs reliable news verification.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="trust-card">
+                <p class="trust-quote">"An essential tool for cross-checking sources before publishing. The confidence score gives me exactly the data point I need to make informed decisions."</p>
+                <div class="trust-author">
+                    <div class="trust-avatar" style="background:linear-gradient(135deg,#1A3FBF,#2B5CE6)">J</div>
+                    <div>
+                        <div class="trust-name">Journalism Researcher</div>
+                        <div class="trust-role">Fact-checking & Media Literacy</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="trust-card">
+                <p class="trust-quote">"The technical depth here is impressive. BiLSTM on 44K articles with NLTK preprocessing is exactly the right approach. The ROC curve speaks for itself."</p>
+                <div class="trust-author">
+                    <div class="trust-avatar" style="background:linear-gradient(135deg,#059669,#34d399)">D</div>
+                    <div>
+                        <div class="trust-name">Data Scientist</div>
+                        <div class="trust-role">Natural Language Processing</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="trust-card">
+                <p class="trust-quote">"Used this for my media literacy course. Students could paste articles and immediately see the AI's reasoning. It sparked some great discussions about misinformation."</p>
+                <div class="trust-author">
+                    <div class="trust-avatar" style="background:linear-gradient(135deg,#D97706,#fbbf24)">E</div>
+                    <div>
+                        <div class="trust-name">University Educator</div>
+                        <div class="trust-role">Media Studies Department</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==========================================
+     CALL TO ACTION
+     ========================================== -->
+<section class="section-sm">
+    <div class="cta-section">
+        <div style="position:relative;z-index:1">
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:99px;padding:6px 16px;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.8);margin-bottom:24px">
+                <i class="fas fa-rocket"></i> Get Started Free
+            </div>
+            <h2 class="cta-title">Ready to Verify Your<br>First Article?</h2>
+            <p class="cta-desc">
+                Join the fight against misinformation. Our AI is ready to analyze any article — no account required, completely free.
+            </p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="{% url 'verify_news' %}" class="btn btn-light btn-lg px-5">
+                    <i class="fas fa-magnifying-glass"></i> Verify News Now
+                </a>
+                <a href="{% url 'about' %}" class="btn btn-outline-light btn-lg px-5">
+                    <i class="fas fa-circle-info"></i> Learn How It Works
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

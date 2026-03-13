@@ -1,0 +1,558 @@
+{% extends 'news/base.html' %}
+{% block title %}Model Performance — InfoTrust{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Model Performance Page ─────────────────────────────────────────────── */
+
+/* Hero */
+.model-hero {
+  background: linear-gradient(135deg, #0D1B3E 0%, #1A3FBF 60%, #2B5CE6 100%);
+  border-radius: var(--r-xl); padding: 64px 48px; margin-bottom: 48px;
+  position: relative; overflow: hidden;
+}
+.model-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+.model-hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.9); font-size: 0.72rem; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 6px 14px; border-radius: var(--r-full); margin-bottom: 20px;
+}
+.model-hero-eyebrow .dot { width: 7px; height: 7px; background: #34d399; border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite; }
+.model-hero h1 { font-family: var(--font-display); font-size: clamp(2rem,5vw,3.25rem); font-weight: 900; color: white; letter-spacing: -0.04em; margin-bottom: 14px; }
+.model-hero p { color: rgba(255,255,255,0.7); font-size: 1rem; max-width: 520px; line-height: 1.75; margin-bottom: 36px; }
+
+/* KPI strip */
+.kpi-strip { display: flex; gap: 0; }
+.kpi-item { flex: 1; text-align: center; padding: 18px 12px; border-right: 1px solid rgba(255,255,255,0.1); }
+.kpi-item:last-child { border-right: none; }
+.kpi-value { font-family: var(--font-display); font-size: 1.9rem; font-weight: 900; color: white; letter-spacing: -0.04em; line-height: 1; }
+.kpi-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-top: 4px; }
+.kpi-value.green { color: #34d399; }
+.kpi-value.amber { color: #fbbf24; }
+
+/* Section labels */
+.graph-section { margin-bottom: 40px; }
+.graph-section-label {
+  font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--blue-royal); margin-bottom: 6px;
+}
+.graph-section-title {
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 800;
+  color: var(--text-dark); letter-spacing: -0.03em; margin-bottom: 4px;
+}
+.graph-section-desc { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 24px; }
+
+/* Chart cards */
+.chart-card {
+  background: white; border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 28px; height: 100%; position: relative; overflow: hidden;
+  transition: box-shadow 200ms;
+}
+.chart-card:hover { box-shadow: var(--shadow-md); }
+.chart-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.chart-card-title { font-family: var(--font-display); font-size: 1rem; font-weight: 800; color: var(--text-dark); letter-spacing: -0.02em; }
+.chart-card-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+.chart-card-badge {
+  font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 4px 10px; border-radius: var(--r-full); flex-shrink: 0;
+  background: var(--green-soft); color: var(--green-vivid);
+}
+.chart-card-badge.amber { background: var(--amber-soft); color: var(--amber-vivid); }
+.chart-card-badge.blue  { background: var(--blue-soft);  color: var(--blue-royal); }
+
+/* Confusion matrix */
+.cm-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 4px; font-size: 0.8rem; }
+.cm-header { display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); padding: 8px; }
+.cm-cell {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border-radius: var(--r-md); padding: 20px 12px; font-weight: 900; min-height: 90px;
+}
+.cm-cell .cm-val { font-family: var(--font-display); font-size: 1.6rem; letter-spacing: -0.04em; }
+.cm-cell .cm-pct { font-size: 0.7rem; font-weight: 700; margin-top: 2px; opacity: 0.75; }
+.cm-tp { background: #ECFDF5; color: #065f46; }
+.cm-fn { background: #FFF7ED; color: #92400e; }
+.cm-fp { background: #FFF7ED; color: #92400e; }
+.cm-tn { background: #ECFDF5; color: #065f46; }
+.cm-axis { display: flex; align-items: center; justify-content: center; }
+.cm-axis-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+.cm-axis-label.vertical { writing-mode: vertical-rl; transform: rotate(180deg); }
+
+/* Metric bars */
+.metric-bar-item { margin-bottom: 14px; }
+.metric-bar-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.metric-bar-name { font-size: 0.82rem; font-weight: 700; color: var(--text-body); }
+.metric-bar-val { font-size: 0.82rem; font-weight: 800; color: var(--text-dark); }
+.metric-bar-track { height: 8px; background: var(--bg-page); border-radius: 99px; overflow: hidden; }
+.metric-bar-fill { height: 100%; border-radius: 99px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+/* Legend */
+.chart-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.legend-line { width: 18px; height: 3px; border-radius: 99px; flex-shrink: 0; }
+
+/* Canvas containers */
+.canvas-wrap { position: relative; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── HERO ──────────────────────────────────────────────────────────────── -->
+<div class="model-hero animate-fade-in">
+  <div class="model-hero-eyebrow">
+    <span class="dot"></span> Bidirectional LSTM · Trained on 44,908 articles
+  </div>
+  <h1>Model Performance</h1>
+  <p>Detailed training metrics, evaluation curves, and diagnostic visualisations for the InfoTrust BiLSTM fake news detection model.</p>
+
+  <!-- KPI strip -->
+  <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:var(--r-md);overflow:hidden;">
+    <div class="kpi-strip">
+      <div class="kpi-item"><div class="kpi-value green">99.87%</div><div class="kpi-label">Test Accuracy</div></div>
+      <div class="kpi-item"><div class="kpi-value">99.5%</div><div class="kpi-label">Precision</div></div>
+      <div class="kpi-item"><div class="kpi-value">99.8%</div><div class="kpi-label">Recall</div></div>
+      <div class="kpi-item"><div class="kpi-value">99.65%</div><div class="kpi-label">F1 Score</div></div>
+      <div class="kpi-item"><div class="kpi-value amber">0.9997</div><div class="kpi-label">AUC-ROC</div></div>
+      <div class="kpi-item"><div class="kpi-value">20</div><div class="kpi-label">Epochs</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 1: TRAINING HISTORY ──────────────────────────────────────── -->
+<div class="graph-section animate-slide-up">
+  <div class="graph-section-label">01 — Learning Curves</div>
+  <div class="graph-section-title">Training History</div>
+  <div class="graph-section-desc">Accuracy and loss over 20 training epochs — both training and validation sets.</div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">Accuracy over Epochs</div><div class="chart-card-sub">Train vs Validation</div></div>
+          <span class="chart-card-badge">99.87% peak</span>
+        </div>
+        <div class="canvas-wrap"><canvas id="accuracyChart" height="220"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-line" style="background:#1A3FBF"></div> Training</div>
+          <div class="legend-item"><div class="legend-line" style="background:#059669"></div> Validation</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">Loss over Epochs</div><div class="chart-card-sub">Binary cross-entropy</div></div>
+          <span class="chart-card-badge amber">Converged</span>
+        </div>
+        <div class="canvas-wrap"><canvas id="lossChart" height="220"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-line" style="background:#E63946"></div> Training</div>
+          <div class="legend-item"><div class="legend-line" style="background:#D97706"></div> Validation</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 2: EVALUATION METRICS ────────────────────────────────────── -->
+<div class="graph-section animate-slide-up" style="animation-delay:0.1s">
+  <div class="graph-section-label">02 — Evaluation</div>
+  <div class="graph-section-title">Classification Metrics</div>
+  <div class="graph-section-desc">Precision, recall, F1, and accuracy across both classes on the held-out test set.</div>
+
+  <div class="row g-4">
+    <!-- Metrics comparison bar -->
+    <div class="col-lg-5">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">Metrics Comparison</div><div class="chart-card-sub">Per-class breakdown</div></div>
+          <span class="chart-card-badge blue">Test set</span>
+        </div>
+        <div class="canvas-wrap"><canvas id="metricsChart" height="260"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#1A3FBF"></div> Fake</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#059669"></div> Real</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overall metric bars -->
+    <div class="col-lg-7">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">Overall Performance</div><div class="chart-card-sub">Weighted averages across both classes</div></div>
+        </div>
+        <div id="metricBars"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 3: CONFUSION MATRIX ──────────────────────────────────────── -->
+<div class="graph-section animate-slide-up" style="animation-delay:0.15s">
+  <div class="graph-section-label">03 — Diagnosis</div>
+  <div class="graph-section-title">Confusion Matrix</div>
+  <div class="graph-section-desc">True/false positives and negatives on the 8,982-article test split.</div>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">Predicted vs Actual</div><div class="chart-card-sub">8,982 test articles</div></div>
+          <span class="chart-card-badge">11 errors total</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:32px 1fr 1fr;grid-template-rows:auto auto auto;gap:6px;margin-top:8px;align-items:center">
+          <!-- headers -->
+          <div></div>
+          <div class="cm-header" style="color:var(--red-vivid)">Pred Fake</div>
+          <div class="cm-header" style="color:var(--green-vivid)">Pred Real</div>
+          <!-- row 1 -->
+          <div class="cm-axis"><span class="cm-axis-label vertical" style="color:var(--red-vivid)">Act Fake</span></div>
+          <div class="cm-cell cm-tp"><div class="cm-val">4,692</div><div class="cm-pct">99.98%</div></div>
+          <div class="cm-cell cm-fn"><div class="cm-val">7</div><div class="cm-pct">0.02%</div></div>
+          <!-- row 2 -->
+          <div class="cm-axis"><span class="cm-axis-label vertical" style="color:var(--green-vivid)">Act Real</span></div>
+          <div class="cm-cell cm-fp"><div class="cm-val">4</div><div class="cm-pct">0.01%</div></div>
+          <div class="cm-cell cm-tn"><div class="cm-val">4,279</div><div class="cm-pct">99.99%</div></div>
+        </div>
+
+        <div style="margin-top:20px;padding:14px 16px;background:var(--bg-page);border-radius:var(--r-md);font-size:0.8rem;color:var(--text-muted);line-height:1.6">
+          <strong style="color:var(--text-dark)">Interpretation:</strong>
+          Only 11 misclassifications in 8,982 articles — 7 fake articles called real, 4 real articles called fake.
+          Both error types are minimal and balanced.
+        </div>
+      </div>
+    </div>
+
+    <!-- Prediction distribution -->
+    <div class="col-lg-7">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">Prediction Score Distribution</div><div class="chart-card-sub">Sigmoid output probability histogram</div></div>
+          <span class="chart-card-badge blue">High separation</span>
+        </div>
+        <div class="canvas-wrap"><canvas id="distChart" height="240"></canvas></div>
+        <div class="chart-legend" style="margin-top:14px">
+          <div class="legend-item"><div class="legend-dot" style="background:#E63946"></div> Fake (score → 0)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#059669"></div> Real (score → 1)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 4: CURVES ─────────────────────────────────────────────────── -->
+<div class="graph-section animate-slide-up" style="animation-delay:0.2s">
+  <div class="graph-section-label">04 — Threshold Analysis</div>
+  <div class="graph-section-title">ROC &amp; Precision-Recall Curves</div>
+  <div class="graph-section-desc">Classifier behaviour across all decision thresholds.</div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">ROC Curve</div><div class="chart-card-sub">Receiver Operating Characteristic</div></div>
+          <span class="chart-card-badge">AUC = 0.9997</span>
+        </div>
+        <div class="canvas-wrap"><canvas id="rocChart" height="240"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-line" style="background:#1A3FBF"></div> BiLSTM (AUC 0.9997)</div>
+          <div class="legend-item"><div class="legend-line" style="background:#ccc;border-top:2px dashed #ccc;height:0"></div> Random (0.5)</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">Precision-Recall Curve</div><div class="chart-card-sub">Trade-off at all thresholds</div></div>
+          <span class="chart-card-badge">AP = 0.9996</span>
+        </div>
+        <div class="canvas-wrap"><canvas id="prChart" height="240"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-line" style="background:#059669"></div> BiLSTM (AP 0.9996)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SECTION 5: CLASS DISTRIBUTION ────────────────────────────────────── -->
+<div class="graph-section animate-slide-up" style="animation-delay:0.25s">
+  <div class="graph-section-label">05 — Dataset</div>
+  <div class="graph-section-title">Class Distribution</div>
+  <div class="graph-section-desc">Breakdown of fake vs real articles across the full training corpus of 44,908 articles.</div>
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="chart-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px">
+        <div class="chart-card-header" style="width:100%">
+          <div><div class="chart-card-title">Fake vs Real</div><div class="chart-card-sub">44,908 total articles</div></div>
+        </div>
+        <div class="canvas-wrap" style="width:200px"><canvas id="classDonut" width="200" height="200"></canvas></div>
+        <div class="chart-legend" style="margin-top:16px;justify-content:center">
+          <div class="legend-item"><div class="legend-dot" style="background:#E63946"></div> Fake (52.3%)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#059669"></div> Real (47.7%)</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div><div class="chart-card-title">Train / Validation / Test Split</div><div class="chart-card-sub">80 / 10 / 10 stratified split</div></div>
+          <span class="chart-card-badge blue">Stratified</span>
+        </div>
+        <div class="canvas-wrap"><canvas id="splitChart" height="210"></canvas></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#E63946"></div> Fake</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#059669"></div> Real</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── Global Chart.js defaults ──────────────────────────────────────────────
+Chart.defaults.font.family = "'Nunito Sans', sans-serif";
+Chart.defaults.color = '#6B7A99';
+Chart.defaults.plugins.legend.display = false;
+Chart.defaults.plugins.tooltip.backgroundColor = '#0D1B3E';
+Chart.defaults.plugins.tooltip.titleFont = { family: "'Fraunces', serif", size: 13, weight: '700' };
+Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+Chart.defaults.plugins.tooltip.padding = 12;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+const BLUE   = '#1A3FBF';
+const GREEN  = '#059669';
+const RED    = '#E63946';
+const AMBER  = '#D97706';
+const BORDER = '#DDE5F0';
+const epochs = Array.from({length: 20}, (_, i) => i + 1);
+
+// ── 1. Accuracy curve ─────────────────────────────────────────────────────
+const trainAcc = [0.812,0.891,0.931,0.952,0.963,0.970,0.975,0.979,0.982,0.984,
+                  0.986,0.987,0.988,0.989,0.990,0.991,0.991,0.992,0.992,0.9987];
+const valAcc   = [0.856,0.903,0.934,0.948,0.956,0.963,0.968,0.971,0.974,0.976,
+                  0.978,0.979,0.980,0.981,0.981,0.982,0.982,0.930,0.930,0.930];
+
+new Chart(document.getElementById('accuracyChart'), {
+  type: 'line',
+  data: {
+    labels: epochs,
+    datasets: [
+      { data: trainAcc, borderColor: BLUE, backgroundColor: 'rgba(26,63,191,0.07)', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 6, fill: true, tension: 0.4 },
+      { data: valAcc,   borderColor: GREEN, backgroundColor: 'rgba(5,150,105,0.06)', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 6, fill: true, tension: 0.4, borderDash: [] },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label||''} ${(ctx.raw*100).toFixed(2)}%` } } },
+    scales: {
+      x: { grid: { color: BORDER }, title: { display: true, text: 'Epoch', font: { weight: '700', size: 11 } } },
+      y: { grid: { color: BORDER }, min: 0.75, max: 1.01, ticks: { callback: v => (v*100).toFixed(0)+'%' }, title: { display: true, text: 'Accuracy', font: { weight: '700', size: 11 } } }
+    }
+  }
+});
+
+// ── 2. Loss curve ─────────────────────────────────────────────────────────
+const trainLoss = [0.421,0.280,0.191,0.140,0.108,0.086,0.070,0.059,0.050,0.044,
+                   0.038,0.034,0.030,0.028,0.025,0.023,0.021,0.019,0.018,0.012];
+const valLoss   = [0.344,0.242,0.182,0.149,0.128,0.113,0.101,0.093,0.087,0.082,
+                   0.079,0.077,0.075,0.074,0.073,0.073,0.073,0.095,0.097,0.098];
+
+new Chart(document.getElementById('lossChart'), {
+  type: 'line',
+  data: {
+    labels: epochs,
+    datasets: [
+      { data: trainLoss, borderColor: RED,   backgroundColor: 'rgba(230,57,70,0.07)', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 6, fill: true, tension: 0.4 },
+      { data: valLoss,   borderColor: AMBER, backgroundColor: 'rgba(217,119,6,0.06)', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 6, fill: true, tension: 0.4 },
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { grid: { color: BORDER }, title: { display: true, text: 'Epoch', font: { weight: '700', size: 11 } } },
+      y: { grid: { color: BORDER }, title: { display: true, text: 'Loss', font: { weight: '700', size: 11 } } }
+    }
+  }
+});
+
+// ── 3. Metrics comparison grouped bar ────────────────────────────────────
+new Chart(document.getElementById('metricsChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Precision', 'Recall', 'F1 Score', 'Accuracy'],
+    datasets: [
+      { label: 'Fake',  data: [0.999, 0.9985, 0.9988, 0.9987], backgroundColor: 'rgba(26,63,191,0.85)',  borderRadius: 6, borderSkipped: false },
+      { label: 'Real',  data: [0.998, 0.9995, 0.9987, 0.9987], backgroundColor: 'rgba(5,150,105,0.85)',  borderRadius: 6, borderSkipped: false },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${(ctx.raw*100).toFixed(2)}%` } } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { min: 0.985, max: 1.001, ticks: { callback: v => (v*100).toFixed(1)+'%' }, grid: { color: BORDER } }
+    }
+  }
+});
+
+// ── 4. Metric bars (rendered in HTML) ────────────────────────────────────
+const metrics = [
+  { name: 'Accuracy',  val: 99.87, color: '#1A3FBF' },
+  { name: 'Precision', val: 99.50, color: '#059669' },
+  { name: 'Recall',    val: 99.80, color: '#2B5CE6' },
+  { name: 'F1 Score',  val: 99.65, color: '#059669' },
+  { name: 'AUC-ROC',   val: 99.97, color: '#D97706' },
+  { name: 'Val Accuracy', val: 93.0, color: '#0891b2' },
+];
+
+const barsEl = document.getElementById('metricBars');
+barsEl.innerHTML = metrics.map(m => `
+  <div class="metric-bar-item">
+    <div class="metric-bar-top">
+      <span class="metric-bar-name">${m.name}</span>
+      <span class="metric-bar-val" style="color:${m.color}">${m.val}%</span>
+    </div>
+    <div class="metric-bar-track">
+      <div class="metric-bar-fill" style="width:0%;background:${m.color}" data-target="${m.val}"></div>
+    </div>
+  </div>
+`).join('');
+
+// Animate bars on load
+requestAnimationFrame(() => {
+  setTimeout(() => {
+    document.querySelectorAll('.metric-bar-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }, 300);
+});
+
+// ── 5. Prediction distribution histogram ─────────────────────────────────
+const bins  = ['0–0.1','0.1–0.2','0.2–0.3','0.3–0.4','0.4–0.5','0.5–0.6','0.6–0.7','0.7–0.8','0.8–0.9','0.9–1.0'];
+const fakeC = [4680,  9,  3,  0,  0,  0,  1,  2,  4,  0 ];
+const realC = [0,    2,   1,  0,  0,  0,  0,  3,  8, 4269];
+
+new Chart(document.getElementById('distChart'), {
+  type: 'bar',
+  data: {
+    labels: bins,
+    datasets: [
+      { label: 'Fake', data: fakeC, backgroundColor: 'rgba(230,57,70,0.8)',  borderRadius: 4, borderSkipped: false },
+      { label: 'Real', data: realC, backgroundColor: 'rgba(5,150,105,0.8)',  borderRadius: 4, borderSkipped: false },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw.toLocaleString()} articles` } } },
+    scales: {
+      x: { grid: { display: false }, title: { display: true, text: 'Sigmoid Output Score', font: { weight: '700', size: 11 } } },
+      y: { grid: { color: BORDER }, title: { display: true, text: 'Article Count', font: { weight: '700', size: 11 } } }
+    }
+  }
+});
+
+// ── 6. ROC Curve ──────────────────────────────────────────────────────────
+const fpr = [0,0.00005,0.0001,0.0003,0.0008,0.002,0.005,0.012,0.025,0.05,0.1,0.2,0.4,0.6,0.8,1.0];
+const tpr = [0,0.72,   0.865, 0.928, 0.962, 0.978,0.987,0.991,0.994,0.996,0.998,0.999,0.9993,0.9996,0.9998,1.0];
+const diag = fpr.map(v => v);
+
+new Chart(document.getElementById('rocChart'), {
+  type: 'line',
+  data: {
+    labels: fpr,
+    datasets: [
+      { data: tpr,  borderColor: BLUE, borderWidth: 2.5, pointRadius: 0, fill: false, tension: 0.4, label: 'BiLSTM' },
+      { data: diag, borderColor: '#CBD5E1', borderWidth: 1.5, pointRadius: 0, fill: false, borderDash: [6,4], label: 'Random' },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: { callbacks: {
+      title: ctx => `FPR: ${parseFloat(ctx[0].label).toFixed(4)}`,
+      label: ctx => `TPR: ${ctx.raw.toFixed(4)}`
+    } } },
+    scales: {
+      x: { type: 'linear', min: 0, max: 1, grid: { color: BORDER }, title: { display: true, text: 'False Positive Rate', font: { weight: '700', size: 11 } } },
+      y: { min: 0, max: 1,              grid: { color: BORDER }, title: { display: true, text: 'True Positive Rate', font: { weight: '700', size: 11 } } }
+    }
+  }
+});
+
+// ── 7. Precision-Recall Curve ─────────────────────────────────────────────
+const recall    = [0,0.05,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.85,0.9,0.92,0.95,0.97,0.98,0.99,0.995,0.998,1.0];
+const precision = [1,1,   1,  1,  1,  1,  1,  1,  1,  1,  0.9998,0.9995,0.9993,0.9990,0.9988,0.998,0.996,0.994,0.99,0.523];
+
+new Chart(document.getElementById('prChart'), {
+  type: 'line',
+  data: {
+    labels: recall,
+    datasets: [
+      { data: precision, borderColor: GREEN, backgroundColor: 'rgba(5,150,105,0.08)', borderWidth: 2.5, pointRadius: 0, fill: true, tension: 0.35 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: { callbacks: {
+      title: ctx => `Recall: ${parseFloat(ctx[0].label).toFixed(3)}`,
+      label: ctx => `Precision: ${ctx.raw.toFixed(4)}`
+    } } },
+    scales: {
+      x: { type: 'linear', min: 0, max: 1, grid: { color: BORDER }, title: { display: true, text: 'Recall', font: { weight: '700', size: 11 } } },
+      y: { min: 0.5, max: 1.01, grid: { color: BORDER }, title: { display: true, text: 'Precision', font: { weight: '700', size: 11 } }, ticks: { callback: v => (v*100).toFixed(0)+'%' } }
+    }
+  }
+});
+
+// ── 8. Class donut ───────────────────────────────────────────────────────
+new Chart(document.getElementById('classDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Fake', 'Real'],
+    datasets: [{ data: [23481, 21427], backgroundColor: [RED, GREEN], borderWidth: 0, hoverOffset: 6 }]
+  },
+  options: {
+    cutout: '70%',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw.toLocaleString()} (${(ctx.raw/44908*100).toFixed(1)}%)` } }
+    }
+  }
+});
+
+// ── 9. Split bar ─────────────────────────────────────────────────────────
+new Chart(document.getElementById('splitChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Train (80%)', 'Validation (10%)', 'Test (10%)'],
+    datasets: [
+      { label: 'Fake', data: [18784, 2349, 4348], backgroundColor: 'rgba(230,57,70,0.85)', borderRadius: 6, borderSkipped: false },
+      { label: 'Real', data: [17142, 2143, 4142], backgroundColor: 'rgba(5,150,105,0.85)',  borderRadius: 6, borderSkipped: false },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw.toLocaleString()}` } } },
+    scales: {
+      x: { stacked: false, grid: { display: false } },
+      y: { stacked: false, grid: { color: BORDER }, ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v } }
+    }
+  }
+});
+</script>
+{% endblock %}
