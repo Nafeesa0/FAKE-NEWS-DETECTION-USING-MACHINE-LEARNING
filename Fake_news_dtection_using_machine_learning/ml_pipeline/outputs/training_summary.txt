@@ -1,0 +1,70 @@
+================================================================================
+FAKE NEWS DETECTION MODEL - TRAINING SUMMARY
+================================================================================
+
+DATASET INFORMATION:
+----------------------------------------
+Total articles: 44,898
+Fake news articles: 23,481
+True news articles: 21,417
+Training samples: 31,428
+Validation samples: 6,735
+Test samples: 6,735
+
+MODEL ARCHITECTURE:
+----------------------------------------
+- Embedding Layer (128 dimensions)
+- Spatial Dropout (0.2)
+- Bidirectional LSTM (128 units)
+- Bidirectional LSTM (64 units)
+- Dense Layer (64 units, ReLU)
+- Dropout (0.5)
+- Dense Layer (32 units, ReLU)
+- Dropout (0.3)
+- Output Layer (1 unit, Sigmoid)
+
+FINAL MODEL PERFORMANCE:
+----------------------------------------
+Accuracy:  99.87%
+Precision: 99.91%
+Recall:    99.81%
+F1-Score:  99.86%
+ROC AUC:   0.9999
+
+CONFUSION MATRIX:
+----------------------------------------
+True Negatives:  3,520
+False Positives: 3
+False Negatives: 6
+True Positives:  3,206
+
+CLASSIFICATION REPORT:
+----------------------------------------
+              precision    recall  f1-score   support
+
+        Fake       1.00      1.00      1.00      3523
+        True       1.00      1.00      1.00      3212
+
+    accuracy                           1.00      6735
+   macro avg       1.00      1.00      1.00      6735
+weighted avg       1.00      1.00      1.00      6735
+
+GENERATED FILES:
+----------------------------------------
+Models:
+  - models/fake_news_lstm_model.h5
+  - models/best_model.h5
+  - models/tokenizer.pkl
+
+Graphs:
+  - graphs/training_history.png
+  - graphs/confusion_matrix.png
+  - graphs/roc_curve.png
+  - graphs/precision_recall_curve.png
+  - graphs/metrics_comparison.png
+  - graphs/class_distribution.png
+  - graphs/prediction_distribution.png
+
+================================================================================
+Training completed successfully!
+================================================================================
