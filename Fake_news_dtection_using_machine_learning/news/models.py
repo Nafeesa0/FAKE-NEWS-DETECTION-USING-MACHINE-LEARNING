@@ -101,3 +101,5 @@ class ScrapingLog(models.Model):
         if self.finished_at:
             return round((self.finished_at - self.started_at).total_seconds(), 1)
         return None
+
+########################################################################################
