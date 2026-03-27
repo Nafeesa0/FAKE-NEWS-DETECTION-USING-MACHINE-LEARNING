@@ -19,5 +19,7 @@ app.conf.beat_schedule = {
         'options': {'expires': 55 * 60},    # discard if not picked up within 55 min
     },
 }
-
 app.conf.timezone = 'UTC'
+
+
+------------------------------------------------------------------
