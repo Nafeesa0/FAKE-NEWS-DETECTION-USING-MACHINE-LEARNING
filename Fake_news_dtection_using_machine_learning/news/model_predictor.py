@@ -88,3 +88,4 @@ def get_predictor():
     if _predictor_instance is None:
         _predictor_instance = FakeNewsPredictor()
     return _predictor_instance
+  """""""""""""""""""""""""""""""""""""""'
