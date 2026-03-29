@@ -327,7 +327,7 @@ def scrape_status(request):
             'duration':  log.duration_seconds,
         })
     return JsonResponse({'logs': data})
-
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 def model_performance(request):
     """Model performance charts page."""
